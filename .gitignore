@@ -2,3 +2,6 @@ __pycache__/
 .venv/
 output/
 pdf_reader_settings.json
+
+# PyCharm idea folder
+/.idea/
