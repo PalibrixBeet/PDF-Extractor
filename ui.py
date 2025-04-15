@@ -559,6 +559,13 @@ class PDFReaderGUI:
             if not os.path.isabs(output_path):
                 output_path = os.path.join(self.current_dir, output_path)
 
+            # Create output directory if it doesn't exist
+            output_dir = os.path.join(os.path.dirname(output_path), 'output')
+            os.makedirs(output_dir, exist_ok=True)
+
+            # Update output path to use the output directory
+            output_path = os.path.join(output_dir, os.path.basename(output_path))
+
             extract_filetype = self.extract_filetype_var.get()
 
             start_page = self.start_page_var.get()
