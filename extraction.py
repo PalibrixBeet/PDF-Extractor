@@ -15,6 +15,10 @@ class PDFReader:
         if skip_pages is None:
             skip_pages = []
 
+        self.bold_fonts = ['Bold', '.B']
+        self.italic_fonts = ['Italic', '.I']
+        self.span_size = 5.5
+
         self.pdf_path = pdf_path
         self.output_path = output_path
 
@@ -77,6 +81,9 @@ class PDFReader:
 
             # 2. </tag>   <tag> -> space
             text = re.sub(r'</' + tag_pattern + r'>(\s*?)<\1>', ' ', text)
+
+            # 3. Some extra specific patterns like </i> ’ <i>
+            text = re.sub(r'</' + tag_pattern + r'>\s*(’)\s*<\1>', r'\2', text)
 
         return text
 
@@ -197,11 +204,11 @@ class PDFPlumberReader(PDFReader):
             for word in line_words:
                 text_part = word['text']
                 if self.html_like:
-                    if word.get('size') < 5:
+                    if word.get('size') < self.span_size:
                         text_part = f'<sup>{text_part}</sup>'
-                    if 'Bold' in word.get('fontname', ''):
+                    if any(font in word.get('fontname', '') for font in self.bold_fonts):
                         text_part = f'<b>{text_part}</b>'
-                    if 'Italic' in word.get('fontname', ''):
+                    if any(font in word.get('fontname', '') for font in self.italic_fonts):
                         text_part = f'<i>{text_part}</i>'
                 text_parts.append(text_part)
                     # text_parts.append(word['text'])
@@ -451,11 +458,11 @@ class PyMuPDFReader(PDFReader):
                     word = span['text']
                     word_flags = self.flags_decomposer(span['flags'])
                     if self.html_like:
-                        if span['size'] < 5:
+                        if span['size'] < self.span_size:
                             word = '<sup>' + word + '</sup>'
-                        if 'Bold' in span['font'] or 'bold' in word_flags:
+                        if any(font in span['font'] for font in self.bold_fonts) or 'bold' in word_flags:
                             word = '<b>' + word + '</b>'
-                        if 'Italic' in span['font'] or 'italic' in word_flags:
+                        if any(font in span['font'] for font in self.italic_fonts) or 'italic' in word_flags:
                             word = '<i>' + word + '</i>'
                     span_text += word + ' '
                 span_text = self.consolidate_formatting(span_text)
