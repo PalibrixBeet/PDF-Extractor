@@ -9,81 +9,6 @@ from pathlib import Path
 from settings import Settings
 
 
-def get_user_data():
-    """
-    Prompt user for PDF processing parameters through command line interface.
-
-    Returns:
-        dict: Parameters for PDF reader configuration
-    """
-    path, files = folder_info()
-    pdf_path = define_file(path, files)
-
-    pdf_name = re.split(r'\\', pdf_path)[-1]
-    output_path = re.sub(r'\.pdfl'
-                         , '.json', pdf_name)
-
-    start_page = int(input('Start page number (skip to start of PDF):\n'
-                           '\tInput PDF pages in native order (e.g. page 1 will have index of 1)') or 1)
-    end_page = int(input('End page number (skip to end of PDF):\n') or 0)
-    skip_pages = input('Pages to skip, separated by comma (skip to none):\n')
-    skip_pages = [int(page.strip()) for page in skip_pages.strip().split(',')] if skip_pages else []
-
-    while True:
-        _mode = input('PDF pages mode (c - columns, r - rows):\n')
-        if _mode in ('c', 'r'):
-            break
-        print('Invalid mode. Please try again.')
-
-    dehyphenate = input('Remove hyphens (y/n)?\n') in ('y', 'Y', 't', 'T', '1')
-
-    pdf_header = input('PDF header coordinates: ') or None
-    pdf_footer = input('PDF footer coordinates: ') or None
-    pdf_left = input('PDF left coordinates: ') or None
-    pdf_right = input('PDF right coordinates: ') or None
-
-    borders = [pdf_header, pdf_left, pdf_right, pdf_footer]
-    return {'pdf_path': pdf_path,
-            'output_path': output_path,
-            'start_page': start_page,
-            'end_page': end_page,
-            'skip_pages': skip_pages,
-            'dehyphenate': dehyphenate,
-            '_mode': _mode,
-            'borders': borders}
-
-
-def get_user_data_debug():
-    """
-    Provide predefined debug parameters without user input.
-
-    Returns:
-        dict: Parameters for PDF reader configuration
-    """
-    # Example hardcoded path - for debugging only
-    pdf_path = r'C:\Users\palib\Programming\Work\Scraping\Scrapy\storage\whole_lines_test.pdf'
-
-    output_path = 'debug.jsonl'
-
-    start_page = 1
-    end_page = 10
-    skip_pages = []
-
-    _mode = 'r'
-
-    dehyphenate = 'y'
-
-    borders = [None, None, None, None]
-    return {'pdf_path': pdf_path,
-            'output_path': output_path,
-            'start_page': start_page,
-            'end_page': end_page,
-            'skip_pages': skip_pages,
-            'dehyphenate': dehyphenate,
-            '_mode': _mode,
-            'borders': borders}
-
-
 class PDFReaderGUI:
     """
     Graphical user interface for the PDF Reader application.
@@ -117,6 +42,7 @@ class PDFReaderGUI:
         self.dehyphenate_var = BooleanVar(value=self.settings.get_setting("dehyphenate", True))
         self.html_like_var = BooleanVar(value=self.settings.get_setting("html_like", False))
         self.reader_type_var = StringVar(value=self.settings.get_setting("reader_type", "plumber"))
+        self.sup_size_var = tk.DoubleVar(value=self.settings.get_setting("sup_size", 6))
 
         self.extra_settings_visible = BooleanVar(value=False)
         self.x_tolerance_var = tk.DoubleVar(value=self.settings.get_setting("x_tolerance", 1))
@@ -173,6 +99,7 @@ class PDFReaderGUI:
             # Update settings with current values
             self.settings.update_setting("last_directory", str(self.current_dir))
             self.settings.update_setting("reader_type", self.reader_type_var.get())
+            self.settings.update_setting("sup_size", self.sup_size_var.get())
             self.settings.update_setting("extract_filetype", self.extract_filetype_var.get())
             self.settings.update_setting("start_page", self.start_page_var.get())
             self.settings.update_setting('end_page', self.end_page_var.get())
@@ -326,6 +253,15 @@ class PDFReaderGUI:
 
         html_check = ttk.Checkbutton(format_frame, text="HTML-like formatting", variable=self.html_like_var)
         html_check.pack(side=tk.LEFT, padx=5)
+
+        sup_frame = ttk.Frame(options_frame)
+        sup_frame.pack(fill=tk.X, pady=5)
+
+        sup_label = ttk.Label(sup_frame, text="Size of <sup> elements (e.g. affiliation keys):")
+        sup_label.pack(side=tk.LEFT, padx=5)
+
+        sup_size = ttk.Entry(sup_frame, textvariable=self.sup_size_var, width=5)
+        sup_size.pack(side=tk.LEFT, padx=5)
 
         # Extra Settings Section (collapsible)
         extra_toggle_frame = ttk.Frame(self.scrollable_frame, relief="flat", borderwidth=0)
@@ -579,7 +515,8 @@ class PDFReaderGUI:
             mode = self.mode_var.get()
             dehyphenate = self.dehyphenate_var.get()
             html_like = self.html_like_var.get()
-
+            sup_size = self.sup_size_var.get()
+            sup_size = float(sup_size) if sup_size else -1
 
             header = self.header_var.get()
             header = float(header) if header else None
@@ -607,6 +544,7 @@ class PDFReaderGUI:
                 'skip_pages': skip_pages,
                 'dehyphenate': dehyphenate,
                 'html_like': html_like,
+                'sup_size': sup_size,
                 '_mode': mode,
                 'borders': borders,
                 'x_tolerance': x_tolerance,

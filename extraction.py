@@ -9,7 +9,7 @@ from alive_progress import alive_bar
 
 class PDFReader:
     def __init__(self, pdf_path, output_path, start_page=1, end_page=0, skip_pages=None, dehyphenate=True, html_like=False,
-                 _mode='c', borders=None, x_tolerance=None, y_tolerance=None):
+                 sup_size=6, _mode='c', borders=None, x_tolerance=None, y_tolerance=None):
         if borders is None:
             borders = [None, None, None, None]
         if skip_pages is None:
@@ -17,7 +17,7 @@ class PDFReader:
 
         self.bold_fonts = ['Bold', '.B']
         self.italic_fonts = ['Italic', '.I']
-        self.span_size = 5.5
+        self.sup_size = sup_size
 
         self.pdf_path = pdf_path
         self.output_path = output_path
@@ -204,7 +204,7 @@ class PDFPlumberReader(PDFReader):
             for word in line_words:
                 text_part = word['text']
                 if self.html_like:
-                    if word.get('size') < self.span_size:
+                    if word.get('size') < self.sup_size:
                         text_part = f'<sup>{text_part}</sup>'
                     if any(font in word.get('fontname', '') for font in self.bold_fonts):
                         text_part = f'<b>{text_part}</b>'
@@ -458,7 +458,7 @@ class PyMuPDFReader(PDFReader):
                     word = span['text']
                     word_flags = self.flags_decomposer(span['flags'])
                     if self.html_like:
-                        if span['size'] < self.span_size:
+                        if span['size'] < self.sup_size:
                             word = '<sup>' + word + '</sup>'
                         if any(font in span['font'] for font in self.bold_fonts) or 'bold' in word_flags:
                             word = '<b>' + word + '</b>'

@@ -1,12 +1,10 @@
 import logging
-import sys
 import threading
 import tkinter as tk
 from tkinter import ttk
 
 from extraction import PDFPlumberReader, PyMuPDFReader
-from ui import get_user_data, get_user_data_debug, PDFReaderGUI
-from settings import Settings
+from ui import PDFReaderGUI
 
 
 pdflogs = ([logging.getLogger(name) for name in logging.root.manager.loggerDict if name.startswith('pdfminer')] +
@@ -58,7 +56,7 @@ def main():
                 if isinstance(child, ttk.Button) and child['text'] == "Extract PDF":
                     child['command'] = on_extract
 
-    # Add a cancel button
+    # Cancel button
     cancel_button = ttk.Button(app.scrollable_frame, text="Cancel", command=on_cancel)
     cancel_button.pack(pady=5)
 
@@ -70,7 +68,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # if len(sys.argv) > 1 and sys.argv[1] in ['-g', '--gui']:
     main()
-    # else:
-    #     main()
