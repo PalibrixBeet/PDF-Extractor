@@ -1,6 +1,7 @@
 from abc import abstractmethod
 import json
 import re
+from gc import disable
 
 import fitz
 import pdfplumber
@@ -8,12 +9,15 @@ from alive_progress import alive_bar
 
 
 class PDFReader:
-    def __init__(self, pdf_path, output_path, start_page=1, end_page=0, skip_pages=None, dehyphenate=True, html_like=False,
-                 sup_size=6, _mode='c', borders=None, x_tolerance=None, y_tolerance=None):
+    def __init__(self, pdf_path, output_path, start_page=1, end_page=0, skip_pages=None, dehyphenate=False, html_like=True,
+                 sup_size=6, _mode='c', borders=None, x_tolerance=1.5, y_tolerance=3, is_stream=False, print_logs=True):
         if borders is None:
             borders = [None, None, None, None]
         if skip_pages is None:
             skip_pages = []
+
+        self.is_stream = is_stream
+        self.print_logs = print_logs
 
         self.bold_fonts = ['Bold', '.B']
         self.italic_fonts = ['Italic', '.I']
@@ -26,7 +30,7 @@ class PDFReader:
         if end_page != 0:
             self.end_page = end_page
         else:
-            with fitz.open(self.pdf_path, filetype='pdf') as doc:
+            with self._open_pdf_doc_pymupdf() as doc:
                 end_page = len(doc)
             self.end_page = end_page
         if self.end_page < self.start_page:
@@ -43,6 +47,17 @@ class PDFReader:
 
         self.x_tolerance = x_tolerance
         self.y_tolerance = y_tolerance
+
+    def _open_pdf_doc_pymupdf(self):
+        if self.is_stream:
+            return fitz.open(stream=self.pdf_path, filetype='pdf')
+        return fitz.open(self.pdf_path, filetype='pdf')
+
+    def _open_pdf_doc_pdfplumber(self):
+        if self.is_stream:
+            import io
+            return pdfplumber.open(io.BytesIO(self.pdf_path))
+        return pdfplumber.open(self.pdf_path)
 
     def filter_by_coordinates(self, block):
         left = self.borders[0]
@@ -121,8 +136,8 @@ class PDFPlumberReader(PDFReader):
         all_lines = []
         line_id = 0
 
-        with alive_bar(self.total_pages) as bar:
-            with pdfplumber.open(self.pdf_path) as pdf:
+        with alive_bar(self.total_pages, disable=not self.print_logs) as bar:
+            with self._open_pdf_doc_pdfplumber() as pdf:
                 for page_num in range(self.start_page - 1, self.end_page):
                     if page_num in self.skip_pages:
                         continue
@@ -303,10 +318,11 @@ class PyMuPDFReader(PDFReader):
         extraction_type = 'html' if self.html_like else 'text'
 
         try:
-            with fitz.open(self.pdf_path, filetype='pdf') as doc:
-                print('Processing pages...')
+            with self._open_pdf_doc_pymupdf() as doc:
+                if self.print_logs:
+                    print('Processing pages...')
 
-                with alive_bar(self.total_pages) as bar:
+                with alive_bar(self.total_pages, disable=not self.print_logs) as bar:
                     for page_num in range(self.start_page - 1, self.end_page):
                         if page_num in self.skip_pages:
                             continue
@@ -352,8 +368,7 @@ class PyMuPDFReader(PDFReader):
             return []
 
     def extract_json(self, app=None):
-        # lines = {}
-        with fitz.open(self.pdf_path, filetype='pdf') as doc:
+        with self._open_pdf_doc_pymupdf() as doc:
             blocks = self.get_blocks(doc, app)
             lines = self.get_lines_by_blocks(blocks)
         return lines
@@ -410,9 +425,10 @@ class PyMuPDFReader(PDFReader):
     def get_blocks(self, doc, app=None):
         flags = self.get_flags()
 
-        print('Processing blocks...')
+        if self.print_logs:
+            print('Processing blocks...')
         all_blocks = []
-        with alive_bar(self.total_pages) as bar:
+        with alive_bar(self.total_pages, disable=not self.print_logs) as bar:
             for page_num in range(self.start_page - 1, self.end_page):
                 if page_num in self.skip_pages:
                     continue
