@@ -473,10 +473,12 @@ class PDFReaderGUI:
             self._toggle_threshold_visibility()
 
     def _toggle_threshold_visibility(self):
-        if self.reader_type_var.get() == "plumber":
-            self.threshold_frame.pack(fill=tk.X, padx=5, pady=5)
-        else:
-            self.threshold_frame.pack_forget()
+        self.threshold_frame.pack(fill=tk.X, padx=5, pady=5)
+        # Disabled toggle as added y_threshold to PyMuPDF
+        # if self.reader_type_var.get() == "plumber":
+        #     self.threshold_frame.pack(fill=tk.X, padx=5, pady=5)
+        # else:
+        #     self.threshold_frame.pack_forget()
 
     def _execute_extraction(self):
         """Execute the PDF extraction based on the form data"""

@@ -3,7 +3,8 @@ import threading
 import tkinter as tk
 from tkinter import ttk
 
-from extraction import PDFPlumberReader, PyMuPDFReader
+from PDFExtractor.extractors._PDFPlumber import PDFPlumberReader
+from PDFExtractor.extractors._PyMuPDF import PyMuPDFReader
 from ui import PDFReaderGUI
 
 
