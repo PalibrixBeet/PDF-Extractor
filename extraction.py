@@ -17,8 +17,8 @@ class PDFReader:
         self.is_stream = is_stream
         self.print_logs = print_logs
 
-        self.bold_fonts = ['Bold', '.B']
-        self.italic_fonts = ['Italic', '.I']
+        self.bold_fonts = ['Bold', '.B', '.BI']
+        self.italic_fonts = ['Italic', '.I', '.BI']
         self.sup_size = sup_size
 
         self.pdf_path = pdf_path
