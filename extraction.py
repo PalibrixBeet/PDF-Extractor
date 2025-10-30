@@ -98,6 +98,9 @@ class PDFReader:
             # 3. Some extra specific patterns like </i> ’ <i>
             text = re.sub(r'</' + tag_pattern + r'>\s*(’)\s*<\1>', r'\2', text)
 
+        # 4 Removes one space before <tag> and one after </tag> after joining text, BUT ONLY ONCE
+        text = re.sub(rf'\s(<{tag_pattern}>)|(</{tag_pattern}>)\s', r'\1\3', text)
+
         return text
 
     @abstractmethod
