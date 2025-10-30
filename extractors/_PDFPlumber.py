@@ -3,7 +3,7 @@ import re
 import unicodedata
 from alive_progress import alive_bar
 
-from PDFExtractor.extraction import PDFReader
+from extraction import PDFReader
 
 
 class PDFPlumberReader(PDFReader):
