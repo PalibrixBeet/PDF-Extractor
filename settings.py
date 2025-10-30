@@ -24,7 +24,7 @@ class Settings:
             'dehyphenate': True,
             'html_like': False,
             'y_tolerance': 3,
-            'x_tolerance': 1.5,
+            'x_tolerance': 1,
             'borders': [None, None, None, None],  # [header, left, right, footer]
         }
 
