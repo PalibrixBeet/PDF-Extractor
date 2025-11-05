@@ -121,4 +121,4 @@ class PDFReader:
             lines = self.extract_txt(app)
             with open(self.output_path, 'wt', encoding='utf-8') as f:
                 for item in lines:
-                    f.write(item)
+                    f.write(item + '\n')
